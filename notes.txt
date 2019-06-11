@@ -1,0 +1,41 @@
+// gdb printing reveals that etab->table is an array of NULL BitArray pointers, why?
+Breakpoint 1, table_bit_encode (etab=0x804d170, c=32 ' ') at src/table.c:150
+150	  BitArray *b = etab->table[c];
+(gdb) p etab
+$1 = (EncodeTable *) 0x804d170
+(gdb) p etab->table
+$2 = {0x0 <repeats 256 times>}
+(gdb)
+
+// is malloc failing in some way?
+Breakpoint 4, table_build (root=0x804e3b8) at src/table.c:181
+181	  EncodeTable *etab = (EncodeTable *)(malloc(sizeof(EncodeTable)));
+(gdb) until 187
+table_build (root=0x804e3b8) at src/table.c:189
+189	  BitArray *new_bit_array = bit_array_new();
+(gdb) step
+bit_array_new () at src/table.c:53
+53	  BitArray *b = (BitArray *)(malloc(sizeof(BitArray)));
+(gdb)
+__GI___libc_malloc (bytes=8) at malloc.c:2878
+2878	malloc.c: No such file or directory.
+(gdb)
+__x86.get_pc_thunk.bx () at ../sysdeps/i386/i686/multiarch/strcat.S:55
+55	../sysdeps/i386/i686/multiarch/strcat.S: No such file or directory.
+(gdb)
+__GI___libc_malloc (bytes=8) at malloc.c:2883
+2883	malloc.c: No such file or directory.
+
+// the returned tree has one node that counted nullchar 256 times:
+Breakpoint 1, huffman_build_tree (filename=0xbffff88a "books/allbytes.txt")
+    at src/huffman.c:190
+190	  free(ctx.pq);
+(gdb) p root
+$1 = (TreeNode *) 0x8051538
+(gdb) p *root
+$2 = {id = 511, type = INTERNAL, freq = {v = 256, c = 0 '\000'}, left = 0x0, right = 0x0,
+  next = 0x0}
+
+huffman_build_tree: 
+"its left child pointing to L, and its right child pointing to R..."
+LOL I CAN'T READ DIRECTIONS
